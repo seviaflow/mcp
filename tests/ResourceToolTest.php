@@ -78,7 +78,7 @@ final class ResourceToolTest extends TestCase
             ['id' => 2, 'name' => 'other tenant', 'password' => 'secret', 'tenant_id' => 2],
             ['id' => 3, 'name' => 'denied', 'password' => 'secret', 'tenant_id' => 1],
         ]);
-        Auth::setUser(new User(['id' => 1]));
+        Auth::setUser((new User)->forceFill(['id' => 1]));
         Gate::policy(ExampleRecord::class, ExamplePolicy::class);
     }
 
