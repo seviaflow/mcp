@@ -96,7 +96,7 @@ final class ResourceToolTest extends TestCase
     public function test_list_preserves_scope_row_policy_and_sensitive_field_filter(): void
     {
         $result = (new ResourceTool('examples', ExampleResource::class, 'list'))->handle(new Request);
-        $json = json_encode($result->toArray());
+        $json = json_encode($result->content()->toArray());
         $this->assertStringContainsString('visible', $json);
         $this->assertStringNotContainsString('other tenant', $json);
         $this->assertStringNotContainsString('denied', $json);
