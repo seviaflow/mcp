@@ -1,0 +1,12 @@
+{
+  "name": "seviaflow/mcp",
+  "description": "Permission-aware MCP adapter for SeviaFlow resources.",
+  "type": "library",
+  "license": "MIT",
+  "homepage": "https://seviaflow.io",
+  "require": {"php": "^8.2", "seviaflow/core": "^0.1@beta", "laravel/mcp": "^1.1.2"},
+  "require-dev": {"orchestra/testbench": "^10.8|^11.0", "phpunit/phpunit": "^11.5|^12.0"},
+  "autoload": {"psr-4": {"SeviaFlow\\Mcp\\": "src/"}},
+  "scripts": {"test": "phpunit tests"},
+  "extra": {"laravel": {"providers": ["SeviaFlow\\Mcp\\McpServiceProvider"]}}
+}
