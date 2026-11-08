@@ -46,10 +46,11 @@ final class ExampleResource extends Resource
 
 final class ExamplePolicy
 {
+    public static bool $allowUpdate = false;
     public function viewAny($user): bool { return true; }
     public function view($user, $record): bool { return $record->name !== 'denied'; }
     public function create($user): bool { return false; }
-    public function update($user, $record): bool { return false; }
+    public function update($user, $record): bool { return self::$allowUpdate; }
 }
 
 final class ResourceToolTest extends TestCase
@@ -69,6 +70,7 @@ final class ResourceToolTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        ExamplePolicy::$allowUpdate = false;
         config(['seviaflow-mcp.enabled' => true]);
         $this->app['db']->connection()->getSchemaBuilder()->create('examples', function ($table) {
             $table->id(); $table->string('name'); $table->string('password'); $table->integer('tenant_id');
@@ -108,6 +110,29 @@ final class ResourceToolTest extends TestCase
         $this->assertFalse((new ResourceTool('examples', ExampleResource::class, 'create'))->shouldRegister());
         (new ResourceTool('examples', ExampleResource::class, 'update'))->handle(new Request(['id' => '1', 'revision' => 'bad', 'values' => ['name' => 'changed']]));
         $this->assertSame('visible', ExampleRecord::find(1)->name);
+    }
+
+    public function test_update_rejects_unknown_fields_and_stale_revision(): void
+    {
+        ExamplePolicy::$allowUpdate = true;
+        $tool = new ResourceTool('examples', ExampleResource::class, 'update');
+        $revision = \SeviaFlow\Core\Operations\ResourceRevision::for(ExampleRecord::find(1));
+        $response = $tool->handle(new Request(['id' => '1', 'revision' => $revision, 'values' => ['tenant_id' => 2]]));
+        $this->assertTrue($response->isError());
+        $response = $tool->handle(new Request(['id' => '1', 'revision' => 'stale', 'values' => ['name' => 'changed']]));
+        $this->assertTrue($response->isError());
+        $this->assertSame('visible', ExampleRecord::find(1)->name);
+    }
+
+    public function test_update_uses_core_operation_service(): void
+    {
+        ExamplePolicy::$allowUpdate = true;
+        $revision = \SeviaFlow\Core\Operations\ResourceRevision::for(ExampleRecord::find(1));
+        $response = (new ResourceTool('examples', ExampleResource::class, 'update'))->handle(
+            new Request(['id' => '1', 'revision' => $revision, 'values' => ['name' => 'changed']])
+        );
+        $this->assertFalse($response->isError(), (string) $response->content());
+        $this->assertSame('changed', ExampleRecord::find(1)->name);
     }
 
     public function test_unsupported_operations_and_nested_fields_are_rejected(): void
