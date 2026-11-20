@@ -46,4 +46,19 @@ final class ConfigurationTest extends TestCase
         $this->assertSame('fields', $schema['readable']['group']);
         $this->assertFalse($schema['enabled']['writable']);
     }
+
+    public function test_registry_rejects_unsupported_mcp_operations_even_for_authorized_editor(): void
+    {
+        $resource = new class extends Resource {};
+        Gate::define('seviaflow.resource-settings.update', fn ($user): bool => true);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(ConfigurationRegistry::class)->validateChanges('mcp', ['operations' => ['sql']], new User, $resource::class);
+    }
+
+    public function test_transport_middleware_cannot_be_changed_via_settings_patch(): void
+    {
+        Gate::define('seviaflow.settings.update', fn ($user): bool => true);
+        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        app(ConfigurationRegistry::class)->validateChanges('mcp', ['middleware' => []], new User);
+    }
 }
