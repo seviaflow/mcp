@@ -87,3 +87,22 @@ row policies, sensitive output and denied writes. CI runs on PHP 8.2–8.4.
   wykorzystać istniejące mechanizmy autoryzacji, transakcji i historii.
 - **Dodać profil OAuth dla klientów czatowych.** Przygotować przykład logowania,
   zgody na dostęp i ograniczania zakresów tokenów w aplikacji hosta.
+
+## Core configuration registry
+
+MCP registers application and resource schemas as the `mcp` module in Core's
+`ConfigurationRegistry`. Transport settings and resource tools read their effective
+configuration through that registry. Existing `mcp(McpResource $mcp)` methods remain
+compatible; the resource resolver translates them into the common schema.
+
+Metadata permissions are `seviaflow.settings.view` / `seviaflow.settings.update`
+(application) and `seviaflow.resource-settings.view` /
+`seviaflow.resource-settings.update` (resource). The host must define those Gates;
+metadata and changes deny access by default. These abilities do not replace record
+CRUD permissions. Endpoint path and authentication middleware are not editable.
+
+This integration currently requires Core branch `feat/module-configuration` until
+a tagged Core release includes the registry. Composer repositories are root-only:
+consuming applications must also configure the Core GitHub VCS repository and
+explicitly require `seviaflow/core:dev-feat/module-configuration` during evaluation.
+Before a release, replace this development dependency with the new Core tag.

@@ -29,7 +29,7 @@ final class ResourceTool extends Tool
 
     public static function definition(string $resource): McpResource
     {
-        return method_exists($resource, 'mcp') ? $resource::mcp(new McpResource) : new McpResource;
+        return McpConfiguration::resource($resource);
     }
 
     public function name(): string
@@ -41,7 +41,7 @@ final class ResourceTool extends Tool
     {
         $definition = self::definition($this->resource);
         $user = Auth::user();
-        if (! config('seviaflow-mcp.enabled') || ! $user instanceof Authenticatable
+        if (! app(\SeviaFlow\Core\Configuration\ConfigurationRegistry::class)->runtime('mcp')['enabled'] || ! $user instanceof Authenticatable
             || ! $definition->isEnabled || ! in_array($this->operation, $definition->allowedOperations, true)) {
             return false;
         }
